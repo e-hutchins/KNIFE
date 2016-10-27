@@ -112,19 +112,19 @@ system ("mv ".$tempOutDir."lindaOUTPUTEST".$screen." ".$tempOutDir."fasta_for_".
 print "perl process_representatives_for_lindas_pipeline.pl ".$tempOutDir."fasta_for_".$screen." ".$referenceDir."/".$gtf." > ".$tempOutDir."denovo_".$screen."\n";
 system ("perl process_representatives_for_lindas_pipeline.pl ".$tempOutDir."fasta_for_".$screen." ".$referenceDir."/".$gtf." > ".$tempOutDir."denovo_".$screen);
 ## consolidates all of these genes and values to be parsimonious
-<<<<<<< HEAD
-print "perl process_max_denovo.pl ".$tempOutDir."denovo_".$screen." > ".$OutDir."denovo_".$screen."_onlycircles".$onlycircles.".fa\n";
-system ("perl process_max_denovo.pl ".$tempOutDir."denovo_".$screen." > ".$OutDir."denovo_".$screen."_onlycircles".$onlycircles.".fa");
 
-print "bowtie2-build ".$OutDir."denovo_".$screen."_onlycircles".$onlycircles.".fa ".$OutDir."denovo_".$screen."_".$onlycircles."\n";
-system("bowtie2-build ".$OutDir."denovo_".$screen."_onlycircles".$onlycircles.".fa ".$OutDir."denovo_".$screen."_".$onlycircles);
-=======
+### OLD CODE BLOCK - DELETE IF WORKS ###
+#print "perl process_max_denovo.pl ".$tempOutDir."denovo_".$screen." > ".$OutDir."denovo_".$screen."_onlycircles".$onlycircles.".fa\n";
+#system ("perl process_max_denovo.pl ".$tempOutDir."denovo_".$screen." > ".$OutDir."denovo_".$screen."_onlycircles".$onlycircles.".fa");
+#
+#print "bowtie2-build ".$OutDir."denovo_".$screen."_onlycircles".$onlycircles.".fa ".$OutDir."denovo_".$screen."_".$onlycircles."\n";
+#system("bowtie2-build ".$OutDir."denovo_".$screen."_onlycircles".$onlycircles.".fa ".$OutDir."denovo_".$screen."_".$onlycircles);
+
 system ("perl process_max_denovo.pl ".$tempOutDir."denovo_".$screen." > ".$tempResultDir."denovo_".$screen."_onlycircles".$onlycircles.".fa");
 
 print "chdir(".$tempResultDir.") or die\n";
 chdir($tempResultDir) or die "$!";
 system("bowtie2-build denovo_".$screen."_onlycircles".$onlycircles.".fa denovo_".$screen."_".$onlycircles);
->>>>>>> origin/master
 
 print "rm ".$tempOutDir."hamming_".$screen."\n\n";
 system ("rm ".$tempOutDir."hamming_".$screen);

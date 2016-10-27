@@ -168,7 +168,7 @@ then
       echo -e "junction alignment complete "`date`
       #echo -e "\nLaunched align into the background "`date`
     else
-      echo "starting genome, ribosome, and transcriptome alignment"
+      echo "starting genome and ribosome alignment"
       ${SCRIPT_DIR}/analysis/align.sh ${READ_FILE} ${SAMPLE_ID} ${ALIGN_PARDIR} ${DATASET_NAME} ${MODE} ${bt_prefix}_genome genome ${bt_prefix}_genome.fa
       echo "genome alignment complete "`date`
       ${SCRIPT_DIR}/analysis/align.sh ${READ_FILE} ${SAMPLE_ID} ${ALIGN_PARDIR} ${DATASET_NAME} ${MODE} ${bt_prefix}_ribosomal ribo ${bt_prefix}_ribosomal.fa
