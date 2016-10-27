@@ -8,8 +8,8 @@
 # assigned to the same junction based on R1 and R2, it will not be double-counted.
 
 # This is aimed at being able to directly compare our results to others who count junctional reads from
-# both R1 and R2. We use the maximum posterior probability reported by either run, and the sum of all reads
-# from both runs, as long as they are not the same id
+# both R1 and R2. We report the posterior probability reported by each run, and the sum of all reads
+# from both runs, as long as they are not the same id.
 
 # parameters:
 # -a is path to original run output (directory that contains glmReports, ids, etc subdirectories)
@@ -20,7 +20,6 @@
 # output: a directory called combinedReports is created as a subdirectory of the path specified as -a (original run output directory).
 #         separate files are created for circular and linear junctions for each of the sample files
 
-# usage: place this file within the analysis subdirectory of circularRNApipeline
 # usage: python combineSwappedReadsGLM.py -a /home/linda/alignments/cancerData/circReads
 #                                         -b /home/linda/alignments/cancerDataSwapped/circReads
 #                                         -q complete
@@ -46,8 +45,8 @@ class junctionAlignment:
     
     def __str__(self):
         return "\t".join([self.id, str(self.numReads), str(self.posterior), str(self.numReads2),
-                          str(self.posterior2), str(len(self.reads)), str(max(self.posterior, self.posterior2))])   
-
+#                          str(self.posterior2), str(len(self.reads)), str(max(self.posterior, self.posterior2))])
+                          str(self.posterior2), str(len(self.reads))])
 def populateJunctions(fileName, fileType):
     handle = open(fileName, "rU")
     
@@ -82,19 +81,18 @@ def updateReadCounts(fileName):
     handle = open(fileName, "rU")
     
     for line in handle:
-        id, r1Align, r2Align, category = line.strip().split()
-        
+        id, category, posR1, qualR1, aScoreR1, numNR1, readLenR1, junctionR1, strandR1, posR2, qualR2, aScoreR2, numNR2, readLenR2, junctionR2, strandR2 = line.strip().split()
+
         if category.startswith("linear") or category.startswith("circ"):
             if args.fastqIdStyle == "appended":
                 id = id[:-1]
-            r1Align = r1Align.split(",")[0]
-            r2Align = r2Align.split(",")[0]
-            if r1Align in junctions:
+
+            if junctionR1 in junctions:
                 # update reads for read 1 aligning to junction
-                junctions[r1Align].reads[id] = None
-            if r2Align in junctions:
+                junctions[junctionR1].reads[id] = None
+            if junctionR2 in junctions:
                 # update reads for read 2 aligning to junction
-                junctions[r2Align].reads[id] = None    
+                junctions[junctionR2].reads[id] = None    
     handle.close()
                 
 # param fileType: a or b, matching with whether the file came from aDir or bDir
@@ -109,7 +107,7 @@ def combineResults(rFileName, iFileName):
     
     # print out
     handle = open("/".join([args.dirA, "combinedReports", rFileName]), "wb")
-    handle.write("junction\torig_count\torig_posterior\tswapped_count\tswapped_posterior\ttotal_reads\tuse_posterior\n")
+    handle.write("junction\torig_count\torig_posterior\tswapped_count\tswapped_posterior\ttotal_reads\n")
     for j in junctions:
         handle.write(str(junctions[j]) + "\n")
     handle.close()
@@ -139,4 +137,3 @@ if __name__  == "__main__":
             
             junctions = {}
             combineResults(reportFileName, idFileName)
-    

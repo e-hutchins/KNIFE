@@ -81,7 +81,8 @@ else
 fi
 
 # a few special flags for the unaligned mode
-if [[ $MODE = *unaligned* ]]
+# checking for unalign instead of unaligned allows to select correct TASK_ID_FILE in R2 run too
+if [[ $MODE = *unalign* ]]
 then
   echo "...Starting findCircularRNA.sh in unaligned mode..."
   TASK_FILE_READ_DIR=${ALIGN_PARDIR}/${DATASET_NAME}/orig/unaligned
@@ -93,14 +94,17 @@ else
 fi
 
 # set up info about this dataset, create directory structures
-if [[ $MODE != analysis* ]]
+if [[ $MODE != *analysis* ]]
 then
   # set up
   echo -e "\ncalling writeTaskIdFiles.py"
   python ${SCRIPT_DIR}/analysis/writeTaskIdFiles.py -r ${TASK_FILE_READ_DIR} -a ${ALIGN_PARDIR} -d ${DATASET_NAME} ${UFLAG}
   
   # select correct prefix name to use for bowtie index files
-  if [[ $MODE = *mouse* ]]
+  if [[ $MODE = *grch38* ]]
+  then
+    bt_prefix="grch38"
+  elif [[ $MODE = *mouse* ]]
   then
     bt_prefix="mm10"
   elif [[ $MODE = *rat* ]]
@@ -144,6 +148,7 @@ NUM_FILES=`cat $TASK_DATA_FILE | wc -l`
 if [[ $MODE != *analysis* ]]
 then
   # have to be inside the index directory so bowtie can find the indices
+  # this block will not be run when called for R2 because we pass the string unalign instead of unaligned
   if [[ $MODE = *unaligned* ]]
   then
     cd ${ALIGN_PARDIR}/${DATASET_NAME}/denovo
@@ -168,15 +173,15 @@ then
       echo "genome alignment complete "`date`
       ${SCRIPT_DIR}/analysis/align.sh ${READ_FILE} ${SAMPLE_ID} ${ALIGN_PARDIR} ${DATASET_NAME} ${MODE} ${bt_prefix}_ribosomal ribo ${bt_prefix}_ribosomal.fa
       echo "ribosomal alignment complete "`date`
-      ${SCRIPT_DIR}/analysis/align.sh ${READ_FILE} ${SAMPLE_ID} ${ALIGN_PARDIR} ${DATASET_NAME} ${MODE} ${bt_prefix}_transcriptome transcriptome ${bt_prefix}_transcriptome.fa
-      echo "transcriptome alignment complete "`date`
-      #echo -e "\nLaunched 3 align.sh's into the background "`date`
+      #${SCRIPT_DIR}/analysis/align.sh ${READ_FILE} ${SAMPLE_ID} ${ALIGN_PARDIR} ${DATASET_NAME} ${MODE} ${bt_prefix}_transcriptome transcriptome ${bt_prefix}_transcriptome.fa
+      #echo "transcriptome alignment complete "`date`
+      #echo -e "\nLaunched 2 align.sh's into the background "`date`
     fi
-    run_count=`ps -ealf | grep align.sh | grep ${USER} | grep -v grep | wc -l`
+    run_count=`ps -ealf | grep align.sh | grep ${USER} | grep ${DATASET_NAME} | grep -v grep | wc -l`
     while [ "$run_count" -gt 3 ]
     do
       sleep 1
-      run_count=`ps -ealf | grep align.sh | grep ${USER} | grep -v grep | wc -l`
+      run_count=`ps -ealf | grep align.sh | grep ${USER} | grep ${DATASET_NAME} | grep -v grep | wc -l`
     done
   done
     
@@ -185,7 +190,7 @@ then
   while [ "$run_count" -gt 0 ]
   do
      sleep 1
-     run_count=`ps -ealf | grep align.sh | grep ${USER} | grep -v grep | wc -l`
+     run_count=`ps -ealf | grep align.sh | grep ${USER} | grep ${DATASET_NAME} | grep -v grep | wc -l`
   done
   echo 'All non-junction align.sh are done '`date`
 
@@ -204,11 +209,11 @@ then
       #echo "Launched 2 junction aligns into the background "`date`
       
       # only want to launch for 1 sample at a time and then wait for completion so we don't overwhelm the server
-      run_count=`ps -ealf | grep align.sh | grep ${USER} | grep -v grep | wc -l`
+      run_count=`ps -ealf | grep align.sh | grep ${USER} | grep ${DATASET_NAME} | grep -v grep | wc -l`
       while [ "$run_count" -gt 0 ]
       do
         sleep 1
-        run_count=`ps -ealf | grep align.sh | grep ${USER} | grep -v grep | wc -l`
+        run_count=`ps -ealf | grep align.sh | grep ${USER} | grep ${DATASET_NAME} | grep -v grep | wc -l`
       done
    done
     echo 'All junction align.sh are done '`date`
@@ -222,13 +227,15 @@ fi
 for (( i=1; i<=NUM_FILES; i++ ))
 do
   SAMPLE_ID=`awk 'FNR == '${i}' {print $2}' $TASK_DATA_FILE`
+
   ${SCRIPT_DIR}/analysis/preprocessAlignedReads.sh ${SAMPLE_ID} ${ALIGN_PARDIR} ${DATASET_NAME} ${JUNCTION_MIDPOINT} ${OVERLAP} ${JUNCTION_DIR_SUFFIX} &
   echo "Launched preprocessAlignedReads.sh into the background "`date`
-  run_count=`ps -ealf | grep preprocessAlignedReads.sh | grep ${USER} | grep -v grep | wc -l`
+
+  run_count=`ps -ealf | grep preprocessAlignedReads.sh | grep ${USER} | grep ${DATASET_NAME} | grep -v grep | wc -l`
   while [ "$run_count" -gt 3 ]
   do
     sleep 1
-    run_count=`ps -ealf | grep preprocessAlignedReads.sh | grep ${USER} | grep -v grep | wc -l`
+    run_count=`ps -ealf | grep preprocessAlignedReads.sh | grep ${USER} | grep ${DATASET_NAME} | grep -v grep | wc -l`
   done
 done
 
@@ -237,7 +244,7 @@ echo 'Done looping over preprocessing, awaiting the last few preprocessAlignedRe
 while [ "$run_count" -gt 0 ]
 do
   sleep 1
-  run_count=`ps -ealf | grep preprocessAlignedReads.sh | grep ${USER} | grep -v grep | wc -l`
+  run_count=`ps -ealf | grep preprocessAlignedReads.sh | grep ${USER} | grep ${DATASET_NAME} | grep -v grep | wc -l`
 done
 
 # was having some I/O issues where output files weren't written even though preprocessAlignedReads.sh was complete, but did get written a few minutes later
@@ -248,13 +255,16 @@ sleep 300
 for (( i=1; i<=NUM_FILES; i++ ))
 do
   SAMPLE_ID=`awk 'FNR == '${i}' {print $2}' $TASK_DATA_FILE`
+
   ${SCRIPT_DIR}/analysis/filterFDR.sh ${MODE} ${SAMPLE_ID} ${ALIGN_PARDIR} ${DATASET_NAME} ${REPORTDIR_NAME} ${READ_STYLE} ${OVERLAP} ${SCRIPT_DIR} ${JUNCTION_DIR_SUFFIX} ${RD1_THRESH} ${RD2_THRESH} &
   echo -e "\nLaunched filterFDR.sh into the background "`date`
-  run_count=`ps -ealf | grep filterFDR.sh | grep ${USER} | grep -v grep | wc -l`
+  #run_count=`ps -ealf | grep filterFDR.sh | grep ${USER} | grep -v grep | wc -l`
+  run_count=`ps -ealf | grep filterFDR.sh | grep ${USER} | grep ${DATASET_NAME} | grep -v grep | wc -l`
+
   while [ "$run_count" -gt 3 ]
   do
     sleep 1
-    run_count=`ps -ealf | grep filterFDR.sh | grep ${USER} | grep -v grep | wc -l`
+    run_count=`ps -ealf | grep filterFDR.sh | grep ${USER} | grep ${DATASET_NAME} | grep -v grep | wc -l`
   done
 done
 
@@ -263,7 +273,7 @@ echo 'Done looping over filterFDR, awaiting the last few filterFDR.sh to finish 
 while [ "$run_count" -gt 0 ]
 do
   sleep 1
-  run_count=`ps -ealf | grep filterFDR.sh | grep ${USER} | grep -v grep | wc -l`
+  run_count=`ps -ealf | grep filterFDR.sh | grep ${USER} | grep ${DATASET_NAME} | grep -v grep | wc -l`
 done
 
 echo -e '\n\nCompleted 1 call to findCircularRNA.sh '`date`

@@ -9,7 +9,12 @@ are the main output files of interest to confirm at each step. Note that glmRepo
 and sampleStats files might not exactly match results provided in testOutput due to slight
 differences in software versions but the results should be close.
 
-1. cd into directory containing findCircularRNA.sh
+The log file provided shows output from running the Standalone code. Similar logs are expected 
+from the running the code on a Cluster, but will be output into several files under OUTPUT_DIRECTORY/logs
+
+findCircularRNA***.sh below refers to findCircularRNA.sh, findCircularRNA_SLURM.sh or findCircularRNA_SGE.sh depending on how you are running the code
+
+1. cd into directory containing findCircularRNA***.sh 
 
 2. To find annotated linear and circular junctions, run the following command after
 replacing READ_DIRECTORY with the absolute path to the directory containing the
@@ -17,7 +22,9 @@ test fq.gz files and OUTPUT_DIRECTORY with the absolute path to the directory
 where you want the output. All other parameters should be left as is, they were
 determined as outlined in the project README to be appropriate for this dataset. 
  
-sh findCircularRNA.sh READ_DIRECTORY complete OUTPUT_DIRECTORY testData 8 sam_large_phred64 circReads 40
+Running on cluster: sh findCircularRNA***.sh READ_DIRECTORY complete OUTPUT_DIRECTORY testData 8 sam_large_phred64 circReads 40
+
+Running on single machine: sh completeRun.sh READ_DIRECTORY complete OUTPUT_DIRECTORY testData 8 phred64 circReads 40 2>&1 | tee out.log
 
 3. Confirm output: 
 
@@ -27,16 +34,60 @@ and SRR1027187_1__circJuncProbs.txt
 b) OUTPUT_DIRECTORY/sampleStats contains SampleAlignStats.txt and SampleCircStats.txt
 
 c) denovo index was created: 6 bowtie2 index files named denovo_testData* and
-denovo_testData_onlycircles1.fa were generated in CODE_DIRECTORY/denovo_scripts/.
+denovo_testData_onlycircles1.fa were generated in OUTPUT_DIRECTORY/logs/denovo_index/.
 
 4. To align to the denovo index and find unannotated circular junctions, run the
 following command, with READ_DIRECTORY and OUTPUT_DIRECTORY matching what you used
 in step 2.
 
-sh findCircularRNA.sh READ_DIRECTORY complete OUTPUT_DIRECTORY testData 8 sam_large_phred64_unaligned circReads 40
+Running on cluster: sh findCircularRNA.sh READ_DIRECTORY complete OUTPUT_DIRECTORY testData 8 sam_large_phred64_unaligned circReads 40
+
+Running on single machine: skip to next step, everything was already run in the call above to completeRun.sh
 
 5. Confirm denovo output:
 
 OUTPUT_DIRECTORY/circReads/reports/unaligned_SRR1027187_1_denovo_report.txt 
+
+6. To increase sensitivity and improve quantification estimates, run the following command to
+generate reports that count both R1 and R2 junctional alignments (above alignments only considered
+R1 junctional alignments).
+
+Running on cluster: sh findCircularRNA.sh READ_DIRECTORY complete OUTPUT_DIRECTORY testData 8 sam_large_phred64_R2analysis circReads 40
+
+Running on single machine: skip to next step, everything was already run in the call above to completeRun.sh
+
+7. Confirm combined report output:
+
+OUTPUT_DIRECTORY/circReads/combinedReports contains SRR1027187_1__linearJuncProbs.txt, SRR1027187_1__circJuncProbs.txt,
+and naiveunaligned_SRR1027187_1_denovo_report.txt
+
+
+#########################
+# TROUBLESHOOTING / FAQ
+#########################
+
+1. What if I get report files but the read counts do not match those provided in example reports?
+
+The most likely issue is that Bowtie is running out of memory but is failing silently. When this happens 
+a valid, but incomplete, sam alignment file is output. You can confirm this is the issue by comparing the 
+number of alignments reported by bowtie2 in stderr or the scheduler .err files in OUTPUT_DIRECTORY/logs/align
+to the number of alignments in the sam file. If for example this is the Bowtie2 log output, then you should have 2461421 
+alignments (591803 + 1869618) in the sam file (2461421 alignment lines + 2 header lines):
+
+19308315 reads; of these:
+  19308315 (100.00%) were unpaired; of these:
+    16846894 (87.25%) aligned 0 times
+    591803 (3.07%) aligned exactly 1 time
+    1869618 (9.68%) aligned >1 times
+    
+2. Why won't the script work on Ubuntu 14?
+
+This is related with how Ubuntu executes /bin/sh; it uses dash instead by default. Although I have not tested on Ubuntu 14,
+a user reported that they were able to solved this problem by either specifying bash ./findCircularRNA_***.sh
+or disabling dash: sudo dpkg-reconfigure dash
+ 
+
+
+
 
 

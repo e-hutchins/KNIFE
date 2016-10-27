@@ -24,7 +24,6 @@ fi
 ORIG_DIRNAME=orig
 RIBO_DIRNAME=ribo
 GENOME_DIRNAME=genome
-TRANSC_DIRNAME=transcriptome
 REG_DIRNAME=reg
 ID_DIRNAME=ids
 
@@ -32,7 +31,6 @@ SAM_DIR=$PAR_DIR/$DATASET_NAME/$ORIG_DIRNAME
 ID_DIR=$SAM_DIR/$ID_DIRNAME
 RIBO_ID_DIR=$ID_DIR/$RIBO_DIRNAME
 GENOME_ID_DIR=$ID_DIR/$GENOME_DIRNAME
-TRANSC_ID_DIR=$ID_DIR/$TRANSC_DIRNAME
 JUNC_ID_DIR=$ID_DIR/$JUNC_DIRNAME
 REG_ID_DIR=$ID_DIR/$REG_DIRNAME
 
@@ -55,14 +53,6 @@ GENOME_NEG=`echo "scale=2; $GENOME_NEG/$TOTAL_GENOME" | bc -l`
   
 # count reads mapping with offset within HBB CDS (chr11 617350-621570) from ucsc hg19 knowngenes file
 HBB_READS=`awk '$3 == "chr11" && $4 >= 617350 && $4 <= 621570 {print $1}' $GENOME_FILE | wc -l`
-  
-TRANSC_FILE=${ID_DIR}/${TRANSC_DIRNAME}/${SAMPLE_ID}_transcriptome_output.txt
-TOTAL_TRANSC=`wc -l $TRANSC_FILE | awk '{print $1}'`
-PERCENT_TRANSC=`echo "scale=4; $TOTAL_TRANSC/$TOTAL_READS" | bc -l`
-TRANSC_POS=`awk '$2 == 0 {print $2}' $TRANSC_FILE | wc -l`
-TRANSC_POS=`echo "scale=2; $TRANSC_POS/$TOTAL_TRANSC" | bc -l`
-TRANSC_NEG=`awk '$2 == 16 {print $2}' $TRANSC_FILE | wc -l`
-TRANSC_NEG=`echo "scale=2; $TRANSC_NEG/$TOTAL_TRANSC" | bc -l`
   
 JUNC_FILE=${ID_DIR}/${JUNC_DIRNAME}/${SAMPLE_ID}_junction_output.txt
 TOTAL_JUNC=`wc -l $JUNC_FILE | awk '{print $1}'`
@@ -114,7 +104,6 @@ then
   samtools view ${SAM_DIR}/${JUNC_DIRNAME}/${SAMPLE_ID}_${JUNC_DIRNAME}_output.bam > ${SAM_DIR}/${JUNC_DIRNAME}/${SAMPLE_ID}_${JUNC_DIRNAME}_output.sam
   samtools view ${SAM_DIR}/${REG_DIRNAME}/${SAMPLE_ID}_${REG_DIRNAME}_output.bam > ${SAM_DIR}/${REG_DIRNAME}/${SAMPLE_ID}_${REG_DIRNAME}_output.sam
   samtools view ${SAM_DIR}/${RIBO_DIRNAME}/${SAMPLE_ID}_${RIBO_DIRNAME}_output.bam > ${SAM_DIR}/${RIBO_DIRNAME}/${SAMPLE_ID}_${RIBO_DIRNAME}_output.sam
-  samtools view ${SAM_DIR}/${TRANSC_DIRNAME}/${SAMPLE_ID}_${TRANSC_DIRNAME}_output.bam > ${SAM_DIR}/${TRANSC_DIRNAME}/${SAMPLE_ID}_${TRANSC_DIRNAME}_output.sam
 fi
   
 UNALIGNED=`python getUnalignedReadCount.py -r ${READ_FILE} -n ${SAMPLE_ID} -a ${SAM_DIR} -t ${NTRIM}`
@@ -127,31 +116,34 @@ then
   rm ${SAM_DIR}/${JUNC_DIRNAME}/${SAMPLE_ID}_${JUNC_DIRNAME}_output.sam
   rm ${SAM_DIR}/${REG_DIRNAME}/${SAMPLE_ID}_${REG_DIRNAME}_output.sam
   rm ${SAM_DIR}/${RIBO_DIRNAME}/${SAMPLE_ID}_${RIBO_DIRNAME}_output.sam
-  rm ${SAM_DIR}/${TRANSC_DIRNAME}/${SAMPLE_ID}_${TRANSC_DIRNAME}_output.sam
 fi
 
 outfile="${OUTDIR_NAME}/${SAMPLE_ID}${OUTF}"
-echo -e "$SAMPLE_ID\t$TOTAL_READS\t$UNALIGNED ($PERCENT_UNALIGNED)\t$TOTAL_GENOME ($PERCENT_GENOME)\t$GENOME_POS, $GENOME_NEG\t$TOTAL_TRANSC ($PERCENT_TRANSC)\t$TRANSC_POS, $TRANSC_NEG\t$TOTAL_REG ($PERCENT_REG)\t$REG_POS, $REG_NEG\t$TOTAL_JUNC ($PERCENT_JUNC)\t$JUNC_POS, $JUNC_NEG\t$TOTAL_RIBO ($PERCENT_RIBO)\t$RIBO_POS, $RIBO_NEG\t$RIBO_28S\t$RIBO_18S\t$RIBO_58S\t$RIBO_5SDNA\t$RIBO_5SrRNA\t$HBB_READS" > $outfile
+echo -e "$SAMPLE_ID\t$TOTAL_READS\t$UNALIGNED ($PERCENT_UNALIGNED)\t$TOTAL_GENOME ($PERCENT_GENOME)\t$GENOME_POS, $GENOME_NEG\t$TOTAL_REG ($PERCENT_REG)\t$REG_POS, $REG_NEG\t$TOTAL_JUNC ($PERCENT_JUNC)\t$JUNC_POS, $JUNC_NEG\t$TOTAL_RIBO ($PERCENT_RIBO)\t$RIBO_POS, $RIBO_NEG\t$RIBO_28S\t$RIBO_18S\t$RIBO_58S\t$RIBO_5SDNA\t$RIBO_5SrRNA\t$HBB_READS" > $outfile
 
 
-# generate the read assignment stats
-REPORT_DIR=${PAR_DIR}/${DATASET_NAME}/${REPORTDIR_NAME}/ids/${SAMPLE_ID}__output.txt
-REPORT_FILE=`find $REPORT_DIR -type f -name "${SAMPLE_ID}__output.txt"` 
-
-if [ -f "${REPORT_FILE}" ]
+# generate the read assignment stats for R1 only
+READ_NUM=`echo ${SAMPLE_ID:(-1)}` # will be a 1 or 2
+if [ "$READ_NUM" -eq 1 ]
 then
-  CIRC_READS=`awk '$4 == "circStrong" {print $4}' ${REPORT_FILE} | wc -l`
-  CIRC_ARTIFACT=`awk '$4 == "circArtifact" {print $4}' ${REPORT_FILE} | wc -l`
-  DECOY_READS=`awk '$4 == "decoy" {print $4}' ${REPORT_FILE} | wc -l`
-  LINEAR_READS=`awk '$4 == "linearStrong" {print $4}' ${REPORT_FILE} | wc -l`
-  LINEAR_ARTIFACT=`awk '$4 == "linearArtifact" {print $4}' ${REPORT_FILE} | wc -l`
-  ANOM_READS=`awk '$4 == "anomaly" {print $4}' ${REPORT_FILE} | wc -l`
-  UN_READS=`awk '$4 == "unmapped" {print $4}' ${REPORT_FILE} | wc -l`
-  NON_GR=`expr $CIRC_READS + $CIRC_ARTIFACT + $DECOY_READS + $LINEAR_READS + $LINEAR_ARTIFACT + $ANOM_READS + $UN_READS`
-  CIRC_FRACTION=`echo "scale=6; $CIRC_READS/$NON_GR" | bc -l`
-  LINEAR_FRACTION=`echo "scale=6; $LINEAR_READS/$NON_GR" | bc -l`
-  CIRC_OVER_LINEAR=`echo "scale=6; $CIRC_FRACTION/$LINEAR_FRACTION" | bc -l`
+  REPORT_DIR=${PAR_DIR}/${DATASET_NAME}/${REPORTDIR_NAME}/ids/${SAMPLE_ID}__output.txt
+  REPORT_FILE=`find $REPORT_DIR -type f -name "${SAMPLE_ID}__output.txt"` 
 
-  outreadsfile="${OUTDIR_NAME}/${SAMPLE_ID}${OUT_READS}"
-  echo -e "$SAMPLE_ID\t$CIRC_READS\t$CIRC_ARTIFACT\t$DECOY_READS\t$LINEAR_READS\t$LINEAR_ARTIFACT\t$ANOM_READS\t$UN_READS\t$NON_GR\t$CIRC_FRACTION\t$LINEAR_FRACTION\t$CIRC_OVER_LINEAR" >> $outreadsfile
+  if [ -f "${REPORT_FILE}" ]
+  then
+    CIRC_READS=`awk '$2 == "circStrong" {print $4}' ${REPORT_FILE} | wc -l`
+    CIRC_ARTIFACT=`awk '$2 == "circArtifact" {print $4}' ${REPORT_FILE} | wc -l`
+    DECOY_READS=`awk '$2 == "decoy" {print $4}' ${REPORT_FILE} | wc -l`
+    LINEAR_READS=`awk '$2 == "linearStrong" {print $4}' ${REPORT_FILE} | wc -l`
+    LINEAR_ARTIFACT=`awk '$2 == "linearArtifact" {print $4}' ${REPORT_FILE} | wc -l`
+    ANOM_READS=`awk '$2 == "anomaly" {print $4}' ${REPORT_FILE} | wc -l`
+    UN_READS=`awk '$2 == "unmapped" {print $4}' ${REPORT_FILE} | wc -l`
+    NON_GR=`expr $CIRC_READS + $CIRC_ARTIFACT + $DECOY_READS + $LINEAR_READS + $LINEAR_ARTIFACT + $ANOM_READS + $UN_READS`
+    CIRC_FRACTION=`echo "scale=6; $CIRC_READS/$NON_GR" | bc -l`
+    LINEAR_FRACTION=`echo "scale=6; $LINEAR_READS/$NON_GR" | bc -l`
+    CIRC_OVER_LINEAR=`echo "scale=6; $CIRC_FRACTION/$LINEAR_FRACTION" | bc -l`
+
+    outreadsfile="${OUTDIR_NAME}/${SAMPLE_ID}${OUT_READS}"
+    echo -e "$SAMPLE_ID\t$CIRC_READS\t$CIRC_ARTIFACT\t$DECOY_READS\t$LINEAR_READS\t$LINEAR_ARTIFACT\t$ANOM_READS\t$UN_READS\t$NON_GR\t$CIRC_FRACTION\t$LINEAR_FRACTION\t$CIRC_OVER_LINEAR" >> $outreadsfile
+  fi
 fi

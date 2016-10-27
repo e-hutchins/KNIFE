@@ -30,7 +30,9 @@ and run the circular RNA analysis pipeline.
 1. fasta file containing the sequences of the genome
 2. fasta file containing the sequences of the transcriptome
 3. fasta file containing the ribosomal RNA sequences (can be split into subunits or just a single sequence)
-4. a gtf file for the species
+4. a gtf file for the species. Junctions are reported based on the "gene_name" field. This is present in most gtf formats,
+   but if the gtf for your species labels the field containing the gene name something else, you will need to update the 
+   gtf to change the label the field to "gene_name" before creating junction indices.
 5. either find or create a bowtie2 genome index that was created with the same genome build you are using for 1-4
 6. either find or create a bowtie genome index. This is bowtie 1, not bowtie2, and is used in the denovo pipeline
 7. either find or create a bowtie2 transcriptome index that was created with the same gtf and genome build you are using
@@ -69,7 +71,7 @@ parameters
 
 -o: directory to output the database files
 
-COMMAND 2: creates the junction indices. This can only be run after step 1 is complete.
+COMMAND 2: creates the junction indices. This can only be run after COMMAND 1 is complete.
 
 sh createJunctionIndex.sh path_to_circularRNApipeline path_to_output_directory INDEX_FILE_ID window_size
 
@@ -77,7 +79,7 @@ parameters
 
 path_to_circularRNApipeline: path to the pipeline directory, index files created will be placed in the index subdirectory
 
-path_to_output_directory: the same outputDirectory used in step 1 to create the exonDB
+path_to_output_directory: the same outputDirectory used in COMMAND 1 to create the exonDB
 
 INDEX_FILE_ID: string selected above that will be included in all of the fasta file names and bowtie index file names
 
