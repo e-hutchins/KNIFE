@@ -32,7 +32,8 @@ then
   NFLAGS=${NFLAGS}" --phred64"
 fi
 
-perf stat -v -B -d bowtie2 -p 6 -x ${INDEX} -U ${READ_FILE} -S ${OUTFILE_BASE}.sam ${NFLAGS}
+#perf stat -v -B -d bowtie2 -p 6 -x ${INDEX} -U ${READ_FILE} -S ${OUTFILE_BASE}.sam ${NFLAGS}
+bowtie2 -p 6 -x ${INDEX} -U ${READ_FILE} -S ${OUTFILE_BASE}.sam ${NFLAGS}
   
 # save output as bam file of aligned reads and remove sam file
 if [[ "$MODE" = *bam* ]]
