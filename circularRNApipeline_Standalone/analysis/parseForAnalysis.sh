@@ -46,6 +46,27 @@ do
     sed '1,2d' ${REG_SAM} | grep "XS:i:" | awk 'x=length($10) {print $1 "\t" $4 "\t" $5 "\t" $12 "\t" $14 "\t" x "\t" $3}' | sed 's/AS:i://' | sed 's/XN:i://' > ${REG_OUT}
     sed '1,2d' ${REG_SAM} | grep -v "XS:i:" | awk 'x=length($10) {print $1 "\t" $4 "\t" $5 "\t" $12 "\t" $13 "\t" x "\t" $3}' | sed 's/AS:i://' | sed 's/XN:i://' >> ${REG_OUT}
   fi
+  
+  #now do the same for R2s
+  if [ "$READ_NUM" -eq 2 ]
+  then
+  
+    JUNC_SAM=${ALIGN_PARDIR}/${DATASET_NAME}/orig/${JUNC_TYPE}/${SAMPLE_ID}_${JUNC_TYPE}_output.sam
+    JUNC_OUT=${TEMP_OUT_DIR}/${SAMPLE_ID}_junction_output.txt
+  
+    REG_SAM=${ALIGN_PARDIR}/${DATASET_NAME}/orig/reg/${ALIGNED_SAMPLE_ID}_reg_output.sam
+    REG_OUT=${TEMP_OUT_DIR}/${SAMPLE_ID}_reg_output.txt
+    
+    echo "JUNC_SAM ${JUNC_SAM}"
+    # parse junctions sam file. remove first 2 comment lines, parse those with a next best reported, 
+    sed '1,2d' ${JUNC_SAM} | grep "XS:i:" | awk 'x=length($10) {print $1 "\t" $4 "\t" $5 "\t" $12 "\t" $14 "\t" x "\t" $3}' | sed 's/AS:i://' | sed 's/XN:i://' > ${JUNC_OUT}
+    sed '1,2d' ${JUNC_SAM} | grep -v "XS:i:" | awk 'x=length($10) {print $1 "\t" $4 "\t" $5 "\t" $12 "\t" $13 "\t" x "\t" $3}' | sed 's/AS:i://' | sed 's/XN:i://' >> ${JUNC_OUT}
+    
+    echo "REG_SAM ${REG_SAM}"
+    # parse reg sam file
+    sed '1,2d' ${REG_SAM} | grep "XS:i:" | awk 'x=length($10) {print $1 "\t" $4 "\t" $5 "\t" $12 "\t" $14 "\t" x "\t" $3}' | sed 's/AS:i://' | sed 's/XN:i://' > ${REG_OUT}
+    sed '1,2d' ${REG_SAM} | grep -v "XS:i:" | awk 'x=length($10) {print $1 "\t" $4 "\t" $5 "\t" $12 "\t" $13 "\t" x "\t" $3}' | sed 's/AS:i://' | sed 's/XN:i://' >> ${REG_OUT}
+  fi
 done
 
 

@@ -5,10 +5,11 @@ $screen = $ARGV[1];  # screen is a variable used for further processing
 $mode = $ARGV[2];  # any string containing mouse, fly, rat, pombe, or crypto will change from default of human genome
 $ntrim = $ARGV[3]; # number of nt to trim from each end (2N/3 is good rule of thumb)
 $onlycircles = $ARGV[4];  # 0 if want linear and circular, 1 if want only circular in denovo index
+$referenceDir = $ARGV[5];
 
 # make output directory for this dataset
 $tempOutDir=$alignDir."/".$screen."/denovo_script_out/";
-print "mkdir -p $tempOutDir";
+print "\nmkdir -p $tempOutDir\n";
 system ("mkdir -p ".$tempOutDir);
 
 ###########################################################################
@@ -47,7 +48,7 @@ if (index($mode, "mouse") != -1){
     $reference="index/salpingoeca_rosetta_1_genome";
     $gtf="salpingoeca_rosetta_1_genes.gtf";   
 } else {
-    $reference="index/hg19_genome";
+    $reference="hg19_genome";
     $gtf="hg19_genes.gtf";
 }
 
@@ -71,16 +72,16 @@ foreach $f (@files){
 $full_path=$wd.$f;
 ($start,$name)=split(/unaligned_/,$f);
 
-print "start is $start and name is $name";
-print "perl align_unaligned_in_pieces_step2.pl $name $full_path $reference $ntrim $tempOutDir";
-system ("perl align_unaligned_in_pieces_step2.pl ".$name . " ". $full_path. " ". $reference ." ".$ntrim." ".$tempOutDir);
+print "start is $start and name is $name\n";
+print "perl align_unaligned_in_pieces_step2.pl $name $full_path $referenceDir/$reference $ntrim $tempOutDir\n";
+system ("perl align_unaligned_in_pieces_step2.pl ".$name . " ". $full_path. " ". $referenceDir. "/". $reference ." ".$ntrim." ".$tempOutDir);
 
 $threeprimefile=$tempOutDir."3prime_".$ntrim."_".$name.".out";
 $fiveprimefile=$tempOutDir."5prime_".$ntrim."_".$name.".out";
 
 print "sample is $sample and COMPLETED ALIGNMENTS files are $threeprimefile and $fiveprimefile and $path$input_file\n";
 print "threeprimeinputfile is $threeprimefile\n";
-print  " perl stat_read_matchup".$diffchrom."_3a.pl ".$fiveprimefile." ".$threeprimefile." ".$onlycircles." ".$full_path." ".$screen." ".$tempOutDir." > ".$tempOutDir."test".$screen."\n";
+print  "perl stat_read_matchup".$diffchrom."_3a.pl ".$fiveprimefile." ".$threeprimefile." ".$onlycircles." ".$full_path." ".$screen." ".$tempOutDir." > ".$tempOutDir."test".$screen."\n";
 system ( " perl  stat_read_matchup".$diffchrom."_3a.pl ".$fiveprimefile." ".$threeprimefile." ".$onlycircles." ".$full_path." ".$screen." ".$tempOutDir." > ".$tempOutDir."test".$screen);
 
 print  "perl test_stats_step2_3c.pl ".$tempOutDir." ".$screen." > ".$tempOutDir."testnew".$screen."\n";
@@ -93,14 +94,24 @@ system ("perl retreive_represent".$diff.".pl ".$full_path." ".$tempOutDir."testn
 
 }
 
+# make output directory for .fa and bowtie indices
+$OutDir=$alignDir."/".$screen."/denovo/";
+print "mkdir -p ".$OutDir."\n";
+system ("mkdir -p ".$OutDir);
+
 ## rest of commands are run on entire directory:
 ## renames files properly
+print "mv ".$tempOutDir."lindaOUTPUTEST".$screen." ".$tempOutDir."fasta_for_".$screen."\n";
 system ("mv ".$tempOutDir."lindaOUTPUTEST".$screen." ".$tempOutDir."fasta_for_".$screen);
 ## generates representatives for each bin and probability, etc.
-system ("perl process_representatives_for_lindas_pipeline.pl ".$tempOutDir."fasta_for_".$screen." ".$gtf." > ".$tempOutDir."denovo_".$screen);
+print "perl process_representatives_for_lindas_pipeline.pl ".$tempOutDir."fasta_for_".$screen." ".$referenceDir."/".$gtf." > ".$tempOutDir."denovo_".$screen."\n";
+system ("perl process_representatives_for_lindas_pipeline.pl ".$tempOutDir."fasta_for_".$screen." ".$referenceDir."/".$gtf." > ".$tempOutDir."denovo_".$screen);
 ## consolidates all of these genes and values to be parsimonious
-system ("perl process_max_denovo.pl ".$tempOutDir."denovo_".$screen." > denovo_".$screen."_onlycircles".$onlycircles.".fa");
+print "perl process_max_denovo.pl ".$tempOutDir."denovo_".$screen." > ".$OutDir."denovo_".$screen."_onlycircles".$onlycircles.".fa\n";
+system ("perl process_max_denovo.pl ".$tempOutDir."denovo_".$screen." > ".$OutDir."denovo_".$screen."_onlycircles".$onlycircles.".fa");
 
-system("bowtie2-build denovo_".$screen."_onlycircles".$onlycircles.".fa denovo_".$screen."_".$onlycircles);
+print "bowtie2-build ".$OutDir."denovo_".$screen."_onlycircles".$onlycircles.".fa ".$OutDir."denovo_".$screen."_".$onlycircles."\n";
+system("bowtie2-build ".$OutDir."denovo_".$screen."_onlycircles".$onlycircles.".fa ".$OutDir."denovo_".$screen."_".$onlycircles);
 
+print "rm ".$tempOutDir."hamming_".$screen."\n\n";
 system ("rm ".$tempOutDir."hamming_".$screen);

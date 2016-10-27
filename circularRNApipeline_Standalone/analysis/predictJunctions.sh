@@ -4,6 +4,7 @@ ALIGN_PARDIR=$1
 DATASET_NAME=$2
 MODE=$3
 REPORTDIR_NAME=$4
+SCRIPT_DIR=$5
 
 MODEL_OUTDIR=${ALIGN_PARDIR}/${DATASET_NAME}/${REPORTDIR_NAME}/glmModels
 REPORT_OUTDIR=${ALIGN_PARDIR}/${DATASET_NAME}/${REPORTDIR_NAME}/glmReports
@@ -22,6 +23,7 @@ for (( i=1; i<=NUM_FILES; i++ ))
 do
   SAMPLE_ID=`awk 'FNR == '${i}' {print $2}' $TASK_DATA_FILE`
   READ_NUM=`echo ${SAMPLE_ID:(-1)}` # will be a 1 or 2
+  echo "READ_NUM is ${READ_NUM}."
   
   # only looking at read1s for now
   if [ "$READ_NUM" -eq 1 ]
@@ -32,7 +34,9 @@ do
     MODEL_OUT=${MODEL_OUTDIR}/${SAMPLE_ID}_${APPENDED}_glm.RData
     LINEAR_JUNC_OUT=${REPORT_OUTDIR}/${SAMPLE_ID}_${APPENDED}_linearJuncProbs.txt
     CIRC_JUNC_OUT=${REPORT_OUTDIR}/${SAMPLE_ID}_${APPENDED}_circJuncProbs.txt
+    echo -e "\nstarting GLM for junction prediction"
     echo "./predictJunctions_tableData.r ${LINEAR_SCORE_FILE} ${CIRC_SCORE_FILE} ${CLASS_FILE} ${MODEL_OUT} ${LINEAR_JUNC_OUT} ${CIRC_JUNC_OUT}"
-    ./predictJunctions_tableData.r ${LINEAR_SCORE_FILE} ${CIRC_SCORE_FILE} ${CLASS_FILE} ${MODEL_OUT} ${LINEAR_JUNC_OUT} ${CIRC_JUNC_OUT}
+    ${SCRIPT_DIR}/analysis/predictJunctions_tableData.r ${LINEAR_SCORE_FILE} ${CIRC_SCORE_FILE} ${CLASS_FILE} ${MODEL_OUT} ${LINEAR_JUNC_OUT} ${CIRC_JUNC_OUT}
   fi
+  
 done

@@ -17,7 +17,7 @@ NFLAGS="--no-sq --score-min L,0,-0.24 --rdg 50,50 --rfg 50,50 --no-unal" # flags
 if [ "$ALIGN_OUTDIR" = "junction" -o "$ALIGN_OUTDIR" = "reg" -o "$ALIGN_OUTDIR" = "denovo" ]
 then
   # no N penalty or cap on N
-  NFLAGS=${NFLAGS}" --n-ceil L,0,1 --np 1 -p 8"
+  NFLAGS=${NFLAGS}" --n-ceil L,0,1 --np 1"
 fi
 
 # for unaligned reads we report all reads. Only the first will be used for further analysis in the pipeline though.
@@ -32,7 +32,7 @@ then
   NFLAGS=${NFLAGS}" --phred64"
 fi
 
-bowtie2 -x ${INDEX} -U ${READ_FILE} -S ${OUTFILE_BASE}.sam ${NFLAGS}
+perf stat -v -B -d bowtie2 -p 6 -x ${INDEX} -U ${READ_FILE} -S ${OUTFILE_BASE}.sam ${NFLAGS}
   
 # save output as bam file of aligned reads and remove sam file
 if [[ "$MODE" = *bam* ]]
@@ -43,7 +43,7 @@ then
   # sorting takes a long time, so only sort if user requested
   if [ "$MODE" = "*bam_sort*" ]
   then
-    echo "sorting bam file: ${OUTFILE_BASE}_unsorted.bam"
+    echo "sorting bam file: ${OUTFILE_BASE}_unsorted.bam\n"
     samtools sort ${OUTFILE_BASE}_unsorted.bam ${OUTFILE_BASE}
 
     # remove intermediates. Although in theory I should have been able to pipe output and not

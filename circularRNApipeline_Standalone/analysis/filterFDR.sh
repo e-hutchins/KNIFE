@@ -1,13 +1,14 @@
 #!/bin/sh
 
 # store commandline params and look up job info in txt file
-MODE=$1
-SAMPLE_ID=$2
-ALIGN_PARDIR=$3
-DATASET_NAME=$4
-OUTDIR_NAME=$5
-READ_TYPE=$6
-OVERLAP=$7
+MODE=${1}
+SAMPLE_ID=${2}
+ALIGN_PARDIR=${3}
+DATASET_NAME=${4}
+OUTDIR_NAME=${5}
+READ_TYPE=${6}
+OVERLAP=${7}
+SCRIPT_DIR=${8}
 
 READ_NUM=`echo ${SAMPLE_ID:(-1)}` # will be a 1 or 2
 
@@ -26,9 +27,11 @@ then
   
   # convert sample bam files to sam if necessary. just checking for a single sam file, not all, assume if 1 exists they all will
   f=`find ${ALIGN_PARDIR}/${DATASET_NAME}/orig/junction -type f -name ${ALIGNED_SAMPLE_ID}_junction_output.sam`
+  echo -e "\nfile ${f} found."  
   
   # if paired end, we will need the mate too. If mate doesn't exist, assume we are working with single-end reads
-  f2=`find ${ALIGN_PARDIR}/${DATASET_NAME}/orig/junction -type f -name ${ALIGNED_SAMPLE_MATE_ID}_junction_output.*`
+  f2=`find ${ALIGN_PARDIR}/${DATASET_NAME}/orig/junction -type f -name ${ALIGNED_SAMPLE_MATE_ID}_junction_output.sam`
+  echo -e "Its mate, file ${f2} found.\n"
   
   if [ ! -f "$f" ]
   then
@@ -82,15 +85,15 @@ then
   fi
   
   # set up alternate python arguments based on parameters passed
-  if [ $# -eq 8 ]
+  if [ $# -eq 9 ]
   then
-    OPT_ARGS=`echo "-j ${8}"`  # id suffix was passed
-  elif [ $# -eq 9 ]
-  then
-    OPT_ARGS=`echo "-a1 ${8} -a2 ${9}"`
+    OPT_ARGS=`echo "-j ${9}"`  # id suffix was passed
   elif [ $# -eq 10 ]
   then
-    OPT_ARGS=`echo "-j ${8} -a1 ${9} -a2 ${10}"`
+    OPT_ARGS=`echo "-a1 ${9} -a2 ${10}"`
+  elif [ $# -eq 11 ]
+  then
+    OPT_ARGS=`echo "-j ${9} -a1 ${10} -a2 ${11}"`
   fi
   
   # add param for single reads if we didn't find a read2 file
@@ -104,8 +107,10 @@ then
   then
     OPT_ARGS=`echo ${OPT_ARGS} -u`
   fi
-    
-  python analysis/filterFDR.py -p ${ALIGN_PARDIR}/${DATASET_NAME} -s ${SAMPLE_ID} -o ${OUTDIR_NAME} -q ${READ_TYPE} -oh ${OVERLAP} -v ${OPT_ARGS}
+  
+  echo -e "\ncalling filterFDR.py"
+  echo "python ${SCRIPT_DIR}/analysis/filterFDR.py -p ${ALIGN_PARDIR}/${DATASET_NAME} -s ${SAMPLE_ID} -o ${OUTDIR_NAME} -q ${READ_TYPE} -oh ${OVERLAP} -v ${OPT_ARGS}"  
+  python ${SCRIPT_DIR}/analysis/filterFDR.py -p ${ALIGN_PARDIR}/${DATASET_NAME} -s ${SAMPLE_ID} -o ${OUTDIR_NAME} -q ${READ_TYPE} -oh ${OVERLAP} -v ${OPT_ARGS}
   
   # delete those sam files when we're done with them
   if [[ $MODE = *unaligned* ]]

@@ -5,17 +5,17 @@
 # computer CPU) and consolidating all individual report files into reports for the entire dataset
 # under sampleStats.
 
-PAR_DIR=$1
-DATASET_NAME=$2
+PAR_DIR=${1}
+DATASET_NAME=${2}
 if [ $# -ge 3 ]
 then
-  REPORTDIR_NAME=$3
+  REPORTDIR_NAME=${3}
 else
   REPORTDIR_NAME=circReads
 fi
 
-NTRIM=$4
-JUNCTION_ID_SUFFIX=$5
+NTRIM=${4}
+JUNCTION_ID_SUFFIX=${5}
 
 TASK_DATA_FILE="${PAR_DIR}/taskIdFiles/${DATASET_NAME}.txt"
 NUM_FILES=`cat $TASK_DATA_FILE | wc -l`
@@ -34,8 +34,9 @@ do
   READ_NUM=`echo ${SAMPLE_ID:(-1)}` # will be a 1 or 2
   
 
-  sh qualityStatsSingleSample.sh $READ_FILE $SAMPLE_ID $PAR_DIR $DATASET_NAME $REPORTDIR_NAME ${OUT_DIR} ${NTRIM} ${JUNCTION_ID_SUFFIX} &
-  echo "Launched qualityStatsSingleSample.sh into the background "`date`
+  echo "./qualityStats/qualityStatsSingleSample.sh $READ_FILE $SAMPLE_ID $PAR_DIR $DATASET_NAME $REPORTDIR_NAME ${OUT_DIR} ${NTRIM} ${JUNCTION_ID_SUFFIX} &"
+  ./qualityStatsSingleSample.sh $READ_FILE $SAMPLE_ID $PAR_DIR $DATASET_NAME $REPORTDIR_NAME ${OUT_DIR} ${NTRIM} ${JUNCTION_ID_SUFFIX} &
+  echo -e "\nLaunched qualityStatsSingleSample.sh into the background "`date`
   run_count=`ps -ealf | grep qualityStatsSingleSample.sh | grep ${USER} | grep -v grep | wc -l`
   while [ "$run_count" -gt 5 ]
   do
@@ -53,5 +54,5 @@ do
 done
 
 # cat all of those files then delete the original separate files
-sh qualityStatsCat.sh ${OUT_DIR}
-
+echo "./qualityStats/qualityStatsCat.sh ${OUT_DIR}"
+./qualityStatsCat.sh ${OUT_DIR}
