@@ -9,7 +9,8 @@ $referenceDir = $ARGV[5];
 
 # make output directory for this dataset
 $tempOutDir=$alignDir."/".$screen."/denovo_script_out/";
-print "\nmkdir -p $tempOutDir\n";
+$tempResultDir=$alignDir."/".$screen."/logs/denovo_index/";
+#print "\nmkdir -p $tempOutDir\n";
 system ("mkdir -p ".$tempOutDir);
 #print "\nmkdir -p $tempResultDir\n";
 system ("mkdir -p ".$tempResultDir);
