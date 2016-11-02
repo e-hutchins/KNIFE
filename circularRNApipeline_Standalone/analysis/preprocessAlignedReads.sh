@@ -80,12 +80,12 @@ then
     outfile="${DENOVO_ID_DIR}/${filename}.txt"
     awk '$1 !~ /^@/ && $4 >= '$MIDPOINT'-length($10)+'$OVERHANG'+1 && $4 <= '$MIDPOINT'-'$OVERHANG'+1 {print $1 "\t" $2 "\t" $3}' $f > $outfile
 
-    if [ "$DO_CONVERT" = true ]
-    then
+    #if [ "$DO_CONVERT" = true ]
+    #then
       # and then remove the temp file
-      echo "planning to remove temp denovo sam file ${f}"
+      #echo "planning to remove temp denovo sam file ${f}"
       #rm ${f}
-    fi
+    #fi
   fi
 else
   # this is a regular first-time run, preprocess all of the genome, junction, ribo
@@ -105,12 +105,12 @@ else
   outfile="${JUNC_ID_DIR}/${filename}.txt"
   awk '$1 !~ /^@/ && $4 >= '$MIDPOINT'-length($10)+'$OVERHANG'+1 && $4 <= '$MIDPOINT'-'$OVERHANG'+1 {print $1 "\t" $2 "\t" $3}' $f > $outfile
 
-  if [ "$DO_CONVERT" = true ]
-  then 
+  #if [ "$DO_CONVERT" = true ]
+  #then 
     # and then remove the temp file
-    echo "planning to remove temp junction sam file ${f}"
+    #echo "planning to remove temp junction sam file ${f}"
     #rm ${f}
-  fi
+  #fi
 
   # get read ids that overlap a regular junction
   f=`find ${REG_ALIGN_DIR} -type f -name ${SAMPLE_ID}_${REG_DIRNAME}_output.sam`
@@ -126,12 +126,12 @@ else
   outfile="${REG_ID_DIR}/${filename}.txt"
   awk '$1 !~ /^@/ && $4 >= '$MIDPOINT'-length($10)+'$OVERHANG'+1 && $4 <= '$MIDPOINT'-'$OVERHANG'+1 {print $1 "\t" $2 "\t" $3}' $f > $outfile
 
-  if [ "$DO_CONVERT" = true ]
-  then 
+  #if [ "$DO_CONVERT" = true ]
+  #then 
     # and then remove the temp file
-    echo "planning to remove temp linear sam file ${f}"
+    #echo "planning to remove temp linear sam file ${f}"
     #rm ${f}
-  fi
+  #fi
 
   # get read ids that aligned to the ribosome
   f=`find ${RIBO_ALIGN_DIR} -type f -name ${SAMPLE_ID}_${RIBO_DIRNAME}_output.sam`
@@ -147,12 +147,12 @@ else
   outfile="${RIBO_ID_DIR}/${filename}.txt"
   awk '$1 !~ /^@/ && $2 != 4 {print $1  "\t" $2 "\t" $3}' $f > $outfile
 
-  if [ "$DO_CONVERT" = true ]
-  then 
+  #if [ "$DO_CONVERT" = true ]
+  #then 
     # and then remove the temp file
-    echo "planning to remove temp ribo sam file ${f}"
+    #echo "planning to remove temp ribo sam file ${f}"
     #rm ${f}
-  fi
+  #fi
 
   # get read ids that aligned to the genome
   f=`find ${GENOME_ALIGN_DIR} -type f -name ${SAMPLE_ID}_${GENOME_DIRNAME}_output.sam`
@@ -168,11 +168,11 @@ else
   outfile="${GENOME_ID_DIR}/${filename}.txt"
   awk '$1 !~ /^@/ && $2 != 4 {print $1  "\t" $2 "\t" $3 "\t" $4}' $f > $outfile
 
-  if [ "$DO_CONVERT" = true ]
-  then 
+  #if [ "$DO_CONVERT" = true ]
+  #then 
     # and then remove the temp file
-    echo "planning to remove temp genome sam file ${f}"
+    #echo "planning to remove temp genome sam file ${f}"
     #rm ${f}
-  fi
+  #fi
 fi
 

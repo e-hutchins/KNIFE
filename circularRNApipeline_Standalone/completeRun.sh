@@ -66,9 +66,10 @@ sleep 300
 # run GLM to output reports  
 if [[ $MODE != *skipGLM* ]]
 then
-#  echo -e "\ncalling parseForAnalysis.sh"
-#  echo "${SCRIPT_DIR}/analysis/parseForAnalysis.sh ${ALIGN_PARDIR} ${DATASET_NAME} ${MODE}"
-#  ${SCRIPT_DIR}/analysis/parseForAnalysis.sh ${ALIGN_PARDIR} ${DATASET_NAME} ${MODE} # get info we need from sam file for linear junctions and circular junctions
+  echo -e "\ncalling parseForAnalysis.sh"
+  echo "${SCRIPT_DIR}/analysis/parseForAnalysis.sh ${ALIGN_PARDIR} ${DATASET_NAME} ${MODE}"
+  ${SCRIPT_DIR}/analysis/parseForAnalysis.sh ${ALIGN_PARDIR} ${DATASET_NAME} ${MODE} # get info we need from sam file for linear junctions and circular junctions
+  cd ${SCRIPT_DIR}/analysis
   echo -e "\ncalling predictJunctions.sh"
   echo "${SCRIPT_DIR}/analysis/predictJunctions.sh ${ALIGN_PARDIR} ${DATASET_NAME} ${MODE} ${REPORTDIR_NAME}"
   ${SCRIPT_DIR}/analysis/predictJunctions.sh ${ALIGN_PARDIR} ${DATASET_NAME} ${MODE} ${REPORTDIR_NAME} ${SCRIPT_DIR}
@@ -100,19 +101,14 @@ then
   ${SCRIPT_DIR}/findCircularRNA.sh ${READ_DIR} ${READ_STYLE} ${ALIGN_PARDIR} ${DATASET_NAME} ${OVERLAP} ${MODE}_unaligned ${REPORTDIR_NAME} ${NTRIM} ${BT1_INDEX} ${BT2_INDEX} ${SCRIPT_DIR} ${DENOVOCIRC} ${JUNCTION_DIR_SUFFIX} ${RD1_THRESH} ${RD2_THRESH} ${JUNCTION_MIDPOINT}
   
 fi
-
-# run pipeline in a read2-centric manner
-#cd ${SCRIPT_DIR}/analysis
-#  echo "./findCircularRNA.sh ${READ_DIR} ${READ_STYLE} ${ALIGN_PARDIR} ${DATASET_NAME} ${OVERLAP} ${MODE}_unaligned ${REPORTDIR_NAME} ${NTRIM} ${DENOVOCIRC} ${JUNCTION_DIR_SUFFIX} ${RD1_THRESH} ${RD2_THRESH} ${JUNCTION_MIDPOINT}"
-#  ./findCircularRNA.sh ${READ_DIR} ${READ_STYLE} ${ALIGN_PARDIR} ${DATASET_NAME} ${OVERLAP} ${MODE}_unaligned ${REPORTDIR_NAME} ${NTRIM} ${DENOVOCIRC} ${JUNCTION_DIR_SUFFIX} ${RD1_THRESH} ${RD2_THRESH} ${JUNCTION_MIDPOINT}
   
 # run R2 analysis to update junctional counts for R2
 if [[ ${MODE} != *skipR2* ]]
 then
-  cd ${SCRIPT_DIR}/analysis
+  echo "script directory is ${SCRIPT_DIR}"
   # set up directories and swap alignment file names to run with R2 as R1
-  echo "python analysis/createSwappedDirectories.py -a ${ALIGN_PARDIR} -d ${DATASET_NAME} -m swap -v"
-  python createSwappedDirectories.py -a ${ALIGN_PARDIR} -d ${DATASET_NAME} -m swap -v 
+  echo "python ${SCRIPT_DIR}/analysis/createSwappedDirectories.py -a ${ALIGN_PARDIR} -d ${DATASET_NAME} -m swap -v"
+  python ${SCRIPT_DIR}/analysis/createSwappedDirectories.py -a ${ALIGN_PARDIR} -d ${DATASET_NAME} -m swap -v 
   
   UNSWAPPED_DIR=${ALIGN_PARDIR}/${DATASET_NAME}/${REPORTDIR_NAME}
   UNSWAPPED_DATASET_NAME=${DATASET_NAME}
@@ -134,55 +130,35 @@ then
   echo "NUM_DENOVO_FILES is ${NUM_DENOVO_FILES}"
   
   # runs analysis mode on the now-swapped reads
-  echo "${SCRIPT_DIR}/findCircularRNA.sh ${READ_DIR} ${READ_STYLE} ${ALIGN_PARDIR} ${DATASET_NAME} ${OVERLAP} ${MODE}_R2analysis ${REPORTDIR_NAME} ${NTRIM} ${DENOVOCIRC} ${JUNCTION_DIR_SUFFIX} ${RD1_THRESH} ${RD2_THRESH} ${JUNCTION_MIDPOINT}"
-  ${SCRIPT_DIR}/findCircularRNA.sh ${READ_DIR} ${READ_STYLE} ${ALIGN_PARDIR} ${DATASET_NAME} ${OVERLAP} ${MODE}_R2analysis ${REPORTDIR_NAME} ${NTRIM} ${DENOVOCIRC} ${JUNCTION_DIR_SUFFIX} ${RD1_THRESH} ${RD2_THRESH} ${JUNCTION_MIDPOINT}
+  echo -e "\n............\nBeginning THIRD pass of findCircularRNA.sh.\n............\n"
+  echo "${SCRIPT_DIR}/findCircularRNA.sh ${READ_DIR} ${READ_STYLE} ${ALIGN_PARDIR} ${DATASET_NAME} ${OVERLAP} ${MODE}_R2analysis ${REPORTDIR_NAME}${BT1_INDEX} ${BT2_INDEX} ${SCRIPT_DIR} ${DENOVOCIRC} ${JUNCTION_DIR_SUFFIX} ${RD1_THRESH} ${RD2_THRESH} ${JUNCTION_MIDPOINT}"
+  ${SCRIPT_DIR}/findCircularRNA.sh ${READ_DIR} ${READ_STYLE} ${ALIGN_PARDIR} ${DATASET_NAME} ${OVERLAP} ${MODE}_R2analysis ${REPORTDIR_NAME} ${NTRIM} ${BT1_INDEX} ${BT2_INDEX} ${SCRIPT_DIR} ${DENOVOCIRC} ${JUNCTION_DIR_SUFFIX} ${RD1_THRESH} ${RD2_THRESH} ${JUNCTION_MIDPOINT}
   
   if [ ${NUM_DENOVO_FILES} -gt 0 ]
   then
     # run unaligned mode on the swapped files. Using string "unalign" instead of "unaligned" allows for selection of correct TASK_ID_FILE but prevents attempt to re-run denovo alignment
-    echo -e "\n............\nBeginning THIRD pass of findCircularRNA.sh.\n............\n"
-    echo "${SCRIPT_DIR}/findCircularRNA.sh ${READ_DIR} ${READ_STYLE} ${ALIGN_PARDIR} ${DATASET_NAME} ${OVERLAP} ${MODE}_R2analysis_unalign ${REPORTDIR_NAME} ${NTRIM} ${DENOVOCIRC} ${JUNCTION_DIR_SUFFIX} ${RD1_THRESH} ${RD2_THRESH} ${JUNCTION_MIDPOINT}"
-    ${SCRIPT_DIR}/findCircularRNA.sh ${READ_DIR} ${READ_STYLE} ${ALIGN_PARDIR} ${DATASET_NAME} ${OVERLAP} ${MODE}_R2analysis_unalign ${REPORTDIR_NAME} ${NTRIM} ${DENOVOCIRC} ${JUNCTION_DIR_SUFFIX} ${RD1_THRESH} ${RD2_THRESH} ${JUNCTION_MIDPOINT}
+    #cd ..
+    #echo "current directory: "`pwd`
+    echo -e "\n............\nBeginning FOURTH pass of findCircularRNA.sh.\n............\n"
+    echo "findCircularRNA.sh ${READ_DIR} ${READ_STYLE} ${ALIGN_PARDIR} ${DATASET_NAME} ${OVERLAP} ${MODE}_R2analysis_unalign ${REPORTDIR_NAME} ${NTRIM} ${BT1_INDEX} ${BT2_INDEX} ${SCRIPT_DIR} ${DENOVOCIRC} ${JUNCTION_DIR_SUFFIX} ${RD1_THRESH} ${RD2_THRESH} ${JUNCTION_MIDPOINT}"
+    ${SCRIPT_DIR}/findCircularRNA.sh ${READ_DIR} ${READ_STYLE} ${ALIGN_PARDIR} ${DATASET_NAME} ${OVERLAP} ${MODE}_R2analysis_unalign ${REPORTDIR_NAME} ${NTRIM} ${BT1_INDEX} ${BT2_INDEX} ${SCRIPT_DIR} ${DENOVOCIRC} ${JUNCTION_DIR_SUFFIX} ${RD1_THRESH} ${RD2_THRESH} ${JUNCTION_MIDPOINT}
   fi
   
   cd ${SCRIPT_DIR}/analysis
-  echo "python combineSwappedReadsNaive.py -a ${UNSWAPPED_DIR} -b ${SWAPPED_DIR} -q ${READ_STYLE}"
-  python combineSwappedReadsNaive.py -a ${UNSWAPPED_DIR} -b ${SWAPPED_DIR} -q ${READ_STYLE}
+  echo "python ${SCRIPT_DIR}/analysis/combineSwappedReadsNaive.py -a ${UNSWAPPED_DIR} -b ${SWAPPED_DIR} -q ${READ_STYLE}"
+  python ${SCRIPT_DIR}/analysis/combineSwappedReadsNaive.py -a ${UNSWAPPED_DIR} -b ${SWAPPED_DIR} -q ${READ_STYLE}
 
   if [[ ${MODE} != *skipGLM* ]]
   then
-    echo "${SCRIPT_DIR}/predictJunctions.sh ${ALIGN_PARDIR} ${DATASET_NAME} ${MODE} ${REPORTDIR_NAME}"
-    ${SCRIPT_DIR}/predictJunctions.sh ${ALIGN_PARDIR} ${DATASET_NAME} ${MODE} ${REPORTDIR_NAME}
+    echo "${SCRIPT_DIR}/analysis/predictJunctions.sh ${ALIGN_PARDIR} ${DATASET_NAME} ${MODE} ${REPORTDIR_NAME}"
+    ${SCRIPT_DIR}/analysis/predictJunctions.sh ${ALIGN_PARDIR} ${DATASET_NAME} ${MODE} ${REPORTDIR_NAME} ${SCRIPT_DIR}
     
-    echo "python combineSwappedReadsGLM.py -a ${UNSWAPPED_DIR} -b ${SWAPPED_DIR} -q ${READ_STYLE}"
-    python combineSwappedReadsGLM.py -a ${UNSWAPPED_DIR} -b ${SWAPPED_DIR} -q ${READ_STYLE}
+    echo "python ${SCRIPT_DIR}/analysis/combineSwappedReadsGLM.py -a ${UNSWAPPED_DIR} -b ${SWAPPED_DIR} -q ${READ_STYLE}"
+    python ${SCRIPT_DIR}/analysis/combineSwappedReadsGLM.py -a ${UNSWAPPED_DIR} -b ${SWAPPED_DIR} -q ${READ_STYLE}
   fi
 
   # swap back all of the alignment files to their original directories
-  echo "python createSwappedDirectories.py -a ${ALIGN_PARDIR} -d ${UNSWAPPED_DATASET_NAME} -m restore -v"
-  python createSwappedDirectories.py -a ${ALIGN_PARDIR} -d ${UNSWAPPED_DATASET_NAME} -m restore -v
+  echo "python ${SCRIPT_DIR}/analysis/createSwappedDirectories.py -a ${ALIGN_PARDIR} -d ${UNSWAPPED_DATASET_NAME} -m restore -v"
+  python ${SCRIPT_DIR}/analysis/createSwappedDirectories.py -a ${ALIGN_PARDIR} -d ${UNSWAPPED_DATASET_NAME} -m restore -v
 
 fi
-
-### Will delete folowwing code once confirmation of successful run ###
-
-#echo -e "\npython createSwappedDirectories.py -a ${ALIGN_PARDIR} -d ${DATASET_NAME} -v"
-#python createSwappedDirectories.py -a ${ALIGN_PARDIR} -d ${DATASET_NAME} -v
-#
-#run in analysis mode on new R2 directory
-#echo -e "\n............\nBeginning THIRD pass of findCircularRNA.sh.\n............\n"
-#echo "${SCRIPT_DIR}/findCircularRNA.sh ${READ_DIR} ${READ_STYLE} ${ALIGN_PARDIR} ${DATASET_NAME}Swapped ${OVERLAP} ${MODE}_analysis ${REPORTDIR_NAME} ${NTRIM} ${BT1_INDEX} ${BT2_INDEX} ${SCRIPT_DIR} ${DENOVOCIRC} ${JUNCTION_DIR_SUFFIX} ${RD1_THRESH} ${RD2_THRESH} ${JUNCTION_MIDPOINT}"
-#${SCRIPT_DIR}/findCircularRNA.sh ${READ_DIR} ${READ_STYLE} ${ALIGN_PARDIR} ${DATASET_NAME}Swapped ${OVERLAP} ${MODE}_analysis ${REPORTDIR_NAME} ${NTRIM} ${BT1_INDEX} ${BT2_INDEX} ${SCRIPT_DIR} ${DENOVOCIRC} ${JUNCTION_DIR_SUFFIX} ${RD1_THRESH} ${RD2_THRESH} ${JUNCTION_MIDPOINT}
-#
-# run GLM to output reports for read2 pass
-#echo -e "\ncalling parseForAnalysis.sh"
-#echo "${SCRIPT_DIR}/analysis/parseForAnalysis.sh ${ALIGN_PARDIR} ${DATASET_NAME}Swapped ${MODE}_analysis"
-#${SCRIPT_DIR}/analysis/parseForAnalysis.sh ${ALIGN_PARDIR} ${DATASET_NAME}Swapped ${MODE}_analysis # get info we need from sam file for linear junctions and circular junctions
-#echo -e "\ncalling predictJunctions.sh"
-#echo "${SCRIPT_DIR}/analysis/predictJunctions.sh ${ALIGN_PARDIR} ${DATASET_NAME}Swapped ${MODE}_analysis ${REPORTDIR_NAME} ${SCRIPT_DIR}"
-#${SCRIPT_DIR}/analysis/predictJunctions.sh ${ALIGN_PARDIR} ${DATASET_NAME}Swapped ${MODE}_analysis ${REPORTDIR_NAME} ${SCRIPT_DIR}
-#cd ..
-#
-#create combined report files
-#cd ${SCRIPT_DIR}/analysis
-#python combineSwappedReadsGLM.py -a ${ALIGN_PARDIR}/${DATASET_NAME}/${REPORTDIR_NAME} -b ${ALIGN_PARDIR}/${DATASET_NAME}Swapped/${REPORTDIR_NAME} -q ${READ_STYLE} -v

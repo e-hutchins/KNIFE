@@ -166,7 +166,7 @@ then
       echo "starting junction alignment"
       ${SCRIPT_DIR}/analysis/align.sh ${READ_FILE} ${SAMPLE_ID} ${ALIGN_PARDIR} ${DATASET_NAME} ${MODE} denovo_${DATASET_NAME}_${DENOVOCIRC} denovo denovo_${DATASET_NAME}_onlycircles${DENOVOCIRC}.fa
       echo -e "junction alignment complete "`date`
-      #echo -e "\nLaunched align into the background "`date`
+     #echo -e "\nLaunched align into the background "`date`
     else
       echo "starting genome and ribosome alignment"
       ${SCRIPT_DIR}/analysis/align.sh ${READ_FILE} ${SAMPLE_ID} ${ALIGN_PARDIR} ${DATASET_NAME} ${MODE} ${bt_prefix}_genome genome ${bt_prefix}_genome.fa
@@ -222,8 +222,9 @@ then
   cd ..
 fi
 
-#echo -e "\nready to preprocess"
+echo -e "\nready to preprocess"
 # preprocessing
+#echo "current directory is: "`pwd`
 for (( i=1; i<=NUM_FILES; i++ ))
 do
   SAMPLE_ID=`awk 'FNR == '${i}' {print $2}' $TASK_DATA_FILE`
